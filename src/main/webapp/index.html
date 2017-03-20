@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>spring-mongo-rest-webapp</h2>
+</body>
+</html>
+
+
+<head>
+    <title>spring-mongo-rest-webapp</title>
+    <script src="http://code.jquery.com/jquery-1.10.1.js">
+    </script>
+</head>
+
+<body>
+
+<p class="title">Find User</p>
+
+<form id="get-user" action="javascript:alert('get user')">
+    <input id="get-user-email" type="text"/>
+    <input class="button" type="submit" value="Find"/>
+</form>
+
+<p class="title">Find all Users</p>
+
+<form id="get-all-users" action="javascript:alert('get users')">
+    <input class="button" type="submit" value="Find All"/>
+</form>
+
+<p class="title">Delete user</p>
+
+<form id="del-user" action="javascript:alert('delete user')">
+    <input id="del-user-email" type="text"/>
+    <input class="button" type="submit" value="Del"/>
+</form>
+
+<div id="find-user-flash-message" class="flash-message">
+</div>
+
+
+
+<div class="result">
+    <table>
+        <tr>
+            <td>LOGIN</td>
+            <td id="login"></td>
+        </tr>
+        <tr>
+            <td>EMAIL</td>
+            <td id="email"></td>
+        </tr>
+        <tr>
+            <td>IMG</td>
+            <td id="img"></td>
+        </tr>
+    </table>
+</div>
+
+<p class="title">Add new user</p>
+
+<div id="add-user-flash-message" class="flash-message">
+</div>
+
+<form id="add-user" action="javascript:alert('add user')">
+    <fieldset>
+        <ol>
+            <li>
+                <label for="add-user-login">LOGIN</label>
+                <input id="add-user-login" name="login" type="text"/>
+            </li>
+            <li>
+                <label for="add-user-email">EMAIL</label>
+                <input id="add-user-email" name="email" type="text"/>
+            </li>
+            <li>
+                <label for="add-user-img">IMG</label>
+                <input id="add-user-img" name="img" type="text"/>
+            </li>
+            <li>
+                <input class="button" type="submit" value="Add"/>
+                <input class="button" type="button" onclick="addFormReset()" value="Reset">
+            </li>
+        </ol>
+    </fieldset>
+</form>
+
+<p class="title">Update user</p>
+<form id="update-user" action="javascript:alert('update user')">
+    <fieldset>
+        <ol>
+            <li>
+                <label for="update-user-login">LOGIN</label>
+                <input id="update-user-login" name="login" type="text"/>
+            </li>
+            <li>
+                <label for="update-user-email">EMAIL</label>
+                <input id="update-user-email" name="email" type="text"/>
+            </li>
+            <li>
+                <label for="update-user-img">IMG</label>
+                <input id="update-user-img" name="img" type="text"/>
+            </li>
+            <li>
+                <input class="button" type="submit" value="Update"/>
+                <input class="button" type="button" onclick="addFormReset()" value="Reset">
+            </li>
+        </ol>
+    </fieldset>
+</form>
+
+<script>
+    $('#find-user-flash-message').hide();
+    $('.result').hide();
+    $('#add-user-flash-message').hide();
+
+    $("#get-user").submit(function() {
+        $.ajax({
+            type: "GET",
+            url: "resources/users/" + $("#get-user-email").val(),
+            dataType: "json",
+
+            success: function(data) {
+                $(".result").fadeOut(500, function() {
+                    $("#login").html(data.login);
+                    $("#email").html(data.email);
+                    $("#img").html(data.img);
+                    $(".result").fadeIn(500)
+                });
+            },
+            error: function(request, textStatus, errorThrown) {
+                if (textStatus == 'error') {
+                    $("#find-user-flash-message").show().html(request.responseText).fadeOut(5000);
+                } else {
+                    $("#find-user-flash-message").show().html("Server error").fadeOut(5000);
+                }
+            }
+        });
+
+        return false;
+    });
+
+        $("#get-all-users").submit(function() {
+        $.ajax({
+            type: "GET",
+            url: "resources/users",
+            dataType: "json",
+
+            success: function(data) {
+
+                     $('body').html(JSON.stringify(data));
+                        console.log(JSON.stringify(data));
+                        $.each(data.d.results, function(index, item){
+                        console.log(item.Title);
+                    });
+
+            },
+            error: function(request, textStatus, errorThrown) {
+                if (textStatus == 'error') {
+                    $("#find-user-flash-message").show().html(request.responseText).fadeOut(5000);
+                } else {
+                    $("#find-user-flash-message").show().html("Server error").fadeOut(5000);
+                }
+            }
+        });
+
+        return false;
+    });
+
+        $("#del-user").submit(function() {
+        $.ajax({
+            type: "DELETE",
+            url: "resources/users/" + $("#del-user-email").val(),
+
+            success: function(data) {
+
+              $("#add-user-flash-message").show().html("User with EMAIL[" +
+              $("#del-user-email").val() + "] was deleted").fadeOut(5000);
+
+            },
+            error: function(request, textStatus, errorThrown) {
+                if (textStatus == 'error') {
+                    $("#find-user-flash-message").show().html(request.responseText).fadeOut(5000);
+                } else {
+                    $("#find-user-flash-message").show().html("Server error").fadeOut(5000);
+                }
+            }
+        });
+
+        return false;
+    });
+
+
+    $("#add-user").submit(function() {
+        if ($("#add-user-email").val().trim() == "") {
+            alert("EMAIL must not be empty!");
+            return false;
+        };
+        var user = formToJSON();
+
+        $.ajax({
+            type: "POST",
+            contentType: "application/json",
+            url: "resources/users",
+            dataType: "json",
+            data: user,
+
+            success: function() {
+                $("#add-user-flash-message").show().html("User with EMAIL[" +
+                        $("#add-user-email").val() + "] was added").fadeOut(5000);
+            },
+            error: function(request, textStatus, errorThrown) {
+                if (textStatus == 'error') {
+                    $("#add-user-flash-message").show().html(request.responseText).fadeOut(5000);
+                } else {
+                    $("#add-user-flash-message").show().html("Server error").fadeOut(5000);
+                }
+            }
+        });
+
+        return false;
+    });
+
+    $("#update-user").submit(function() {
+        if ($("#update-user-email").val().trim() == "") {
+            alert("EMAIL must not be empty!");
+            return false;
+        };
+        var user = formToJSONu();
+
+        $.ajax({
+            type: "PUT",
+            contentType: "application/json",
+            url: "resources/users",
+            dataType: "json",
+            data: user,
+
+            success: function() {
+                $("#add-user-flash-message").show().html("User with EMAIL[" +
+                        $("#update-user-email").val() + "] was updated").fadeOut(5000);
+            },
+            error: function(request, textStatus, errorThrown) {
+                if (textStatus == 'error') {
+                    $("#add-user-flash-message").show().html(request.responseText).fadeOut(5000);
+                } else {
+                    $("#add-user-flash-message").show().html("Server error").fadeOut(5000);
+                }
+            }
+        });
+
+        return false;
+    });
+
+    function formToJSON() {
+        var login = $("#add-user-login").val().trim();
+        var email = $("#add-user-email").val().trim();
+        var img = $("#add-user-img").val().trim();
+
+        return JSON.stringify({
+            "login": login == "" ? null : login,
+            "email": email == "" ? null : email,
+            "img": img == "" ? null : img
+        });
+    }
+
+    function formToJSONu() {
+        var login = $("#update-user-login").val().trim();
+        var email = $("#update-user-email").val().trim();
+        var img = $("#update-user-img").val().trim();
+
+        return JSON.stringify({
+            "login": login == "" ? null : login,
+            "email": email == "" ? null : email,
+            "img": img == "" ? null : img
+        });
+    }
+
+    function addFormReset() {
+        $("#add-user")[0].reset();
+    }
+</script>
+
+</body>
+
+</html>
